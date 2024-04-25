@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Hello World</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css"
+          integrity="sha384-B0vP5xmATw1+K9KRQjQERJvTumQW0nPEzvF6L/Z6nronJ3oUOFUFpCjEUQouq2+l" crossorigin="anonymous">
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item">
+                <a onclick="showPosts()" class="nav-link" href="#">Posts</a>
+            </li>
+        </ul>
+    </div>
+</nav>
+
+<div class="container">
+    <div id="content"></div>
+    <div id="forma" style="display: none;">
+        <form method="POST" id="subject-form">
+            <div class="form-group">
+                <label for="subject-title">Author</label>
+                <input type="text" class="form-control" id="author-title" placeholder="Enter author">
+
+                <label for="subject-title">Title</label>
+                <input type="text" class="form-control" id="subject-title" placeholder="Enter title">
+
+                <label for="subject-content">Content</label>
+                <textarea class="form-control" id="subject-content"></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </form>
+    </div>
+    <br><br>
+
+    <div id="subject-links"></div>
+</div>
+
+<script>
+    function showPosts() {
+        const content = document.getElementById('content');
+        const form = document.getElementById('forma');
+        form.style.display = 'none';
+
+        fetch('/api/subjects', {
+            method: 'GET'
+        }).then(response => {
+            return response.json();
+        }).then(subjects => {
+            content.innerHTML = '<h1>Posts</h1> <br> <button onclick="changeToForm()" class="btn btn-primary">New post</button> <br><br>';
+            for (const subject of subjects) {
+                const postDiv = document.createElement('div');
+                postDiv.innerHTML = `
+                <h2>${subject.title}</h2>
+                <p>${subject.content.substring(0,100)+"..."}</p>
+                <a href="#" onclick="showPostDetails(${subject.id})">More</a>
+                <p>${subject.time}</p>
+                <hr>
+            `;
+                postDiv.style.textAlign = 'center';
+                content.appendChild(postDiv);
+            }
+        })
+    }
+    function showPostDetails(id) {
+        const content = document.getElementById('content');
+        const form = document.getElementById('forma');
+        form.style.display = 'none';
+
+        fetch(`/api/subjects/` + id, {
+            method: 'GET'
+        }).then(response => {
+            return response.json();
+        }).then(subject => {
+            content.innerHTML = `
+        <h2>${subject.title}</h2>
+        <h6>${subject.time}</h6>
+        <h6>${subject.author}</h6>
+        <br>`
+        let i;
+        for (i = 0; i < subject.content.length; i += 100) {
+            content.innerHTML += `<p>${subject.content.substring(i, i + 100)}</p>`
+        }
+        content.innerHTML+=`<br><br>
+        <h2>Comments</h2>
+        <div id="comments-container"></div>
+        <br>
+        <div id="new-comment">
+           <form id="comment-form">
+            <div class="form-group">
+                <label for="comment-name">Name</label>
+                <input type="text" class="form-control" id="comment-name" placeholder="Enter your name">
+
+                <label for="comment-content">Comment</label>
+                <textarea class="form-control" id="comment-content" placeholder="Enter your comment"></textarea>
+            </div>
+        </form>
+        </div>
+        <button type="submit" onclick="addComment(${id})" class="btn btn-primary">Add Comment</button>
+        <br><br>
+
+        <button onclick="showPosts()" class="btn btn-primary">Back</button>
+
+    `;
+
+            const commentsContainer = document.getElementById('comments-container');
+            fetch(`/api/comments/` + id, {
+                method: 'GET'
+            }).then(response => {
+                return response.json();
+            }).then(comments => {
+                for (const comment of comments) {
+                    const commentDiv = document.createElement('div');
+                    commentDiv.innerHTML = `
+                <h6>${comment.name}</h6>
+                <p>${comment.text}</p>
+                <hr>
+            `;
+                    commentsContainer.appendChild(commentDiv);
+                }
+            });
+        });
+
+    }
+    function addComment(postId) {
+        const nameElement = document.getElementById('comment-name');
+        const contentElement = document.getElementById('comment-content');
+        const name = nameElement.value;
+        const text = contentElement.value;
+
+        fetch(`/api/comments`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                name: name,
+                text: text,
+                postId: postId
+            })
+        }).then(response => {
+
+            return response.json();
+        }).then(comment => {
+            showPostDetails(postId);
+            nameElement.value = '';
+            contentElement.value = '';
+        });
+    }
+    function changeToForm() {
+        const form = document.getElementById('forma');
+        form.style.display = 'block';
+        const div = document.getElementById('content');
+        div.innerHTML = '';
+    }
+    showPosts();
+
+    document.getElementById('subject-form').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const postTitleElement = document.getElementById('subject-title');
+        const contentElement = document.getElementById('subject-content');
+        const authorElement = document.getElementById('author-title');
+
+        const title = postTitleElement.value;
+        const content = contentElement.value;
+        const author = authorElement.value;
+        const currentDate = new Date().toISOString();
+
+        fetch('/api/subjects', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                title: title,
+                content: content,
+                author: author,
+                time: currentDate.substring(0,10)
+            })
+        }).then(response => {
+            return response.json();
+        }).then(subject => {
+            showPosts();
+
+            postTitleElement.value = '';
+            contentElement.value = '';
+            authorElement.value = '';
+        });
+    });
+</script>
+</body>
+</html>
