@@ -17,11 +17,7 @@ public class CommentResource {
     @Inject
     private CommentService commentService;
 
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response all() {
-        return Response.ok(this.commentService.allComments()).build();
-    }
+
 
     @POST
     @Produces(MediaType.APPLICATION_JSON)

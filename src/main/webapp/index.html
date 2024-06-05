@@ -16,11 +16,25 @@
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
         <ul class="navbar-nav mr-auto">
             <li class="nav-item">
-                <a onclick="showPosts()" class="nav-link" href="#">Posts</a>
+                <a onclick="login()" class="nav-link" href="#">Posts</a>
             </li>
         </ul>
     </div>
 </nav>
+
+<div class="container">
+    <form method="POST" id="login-form">
+        <div class="form-group">
+            <label for="login-username">Username</label>
+            <input type="username" class="form-control" id="login-username" placeholder="Enter username">
+
+            <label for="login-password">Password</label>
+            <input type="password" class="form-control" id="login-password" placeholder="Enter password">
+        </div>
+
+        <button type="submit" onclick="login(event)" class="btn btn-primary">Login</button>
+    </form>
+</div>
 
 <div class="container">
     <div id="content"></div>
@@ -46,10 +60,15 @@
 </div>
 
 <script>
+    let usernamee = '';
     function showPosts() {
         const content = document.getElementById('content');
         const form = document.getElementById('forma');
+        const loginForm = document.getElementById('login-form');
+        loginForm.style.display = 'none';
         form.style.display = 'none';
+        document.getElementById('author-title').value = usernamee;
+
 
         fetch('/api/subjects', {
             method: 'GET'
@@ -66,16 +85,48 @@
                 <p>${subject.time}</p>
                 <hr>
             `;
+                if(subject.title.length > 100)
+                    alert("Title is over 100 characters");
+                if(subject.content.length > 1000)
+                    alert("Content is over 1000 characters");
+
                 postDiv.style.textAlign = 'center';
                 content.appendChild(postDiv);
             }
         })
     }
+    function login(event) {
+        event.preventDefault(); // Prevent the default form submission behavior
+        const usernameElement = document.getElementById('login-username');
+        const passwordElement = document.getElementById('login-password');
+        const username = usernameElement.value;
+        const password = passwordElement.value;
+
+        fetch('/api/users/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                username: username,
+                password: password
+            })
+        }).then(response => {
+            return response.json();
+        }).then(response => {
+            if (response.message === "These credentials do not match our records") {
+                alert(response.message)
+
+            } else {
+                usernamee = username;
+                showPosts();
+            }
+        });
+    }
     function showPostDetails(id) {
         const content = document.getElementById('content');
         const form = document.getElementById('forma');
         form.style.display = 'none';
-
         fetch(`/api/subjects/` + id, {
             method: 'GET'
         }).then(response => {
@@ -98,7 +149,7 @@
            <form id="comment-form">
             <div class="form-group">
                 <label for="comment-name">Name</label>
-                <input type="text" class="form-control" id="comment-name" placeholder="Enter your name">
+                <input type="text" class="form-control" id="comment-name" value = ${usernamee}>
 
                 <label for="comment-content">Comment</label>
                 <textarea class="form-control" id="comment-content" placeholder="Enter your comment"></textarea>
@@ -136,7 +187,8 @@
         const contentElement = document.getElementById('comment-content');
         const name = nameElement.value;
         const text = contentElement.value;
-
+        if(text.length > 1000)
+            alert("Text is over 1000 characters");
         fetch(`/api/comments`, {
             method: 'POST',
             headers: {
@@ -152,7 +204,6 @@
             return response.json();
         }).then(comment => {
             showPostDetails(postId);
-            nameElement.value = '';
             contentElement.value = '';
         });
     }
@@ -162,7 +213,7 @@
         const div = document.getElementById('content');
         div.innerHTML = '';
     }
-    showPosts();
+
 
     document.getElementById('subject-form').addEventListener('submit', function (e) {
         e.preventDefault();
@@ -175,6 +226,13 @@
         const content = contentElement.value;
         const author = authorElement.value;
         const currentDate = new Date().toISOString();
+
+        if(title.length > 100)
+            alert("Title is over 100 characters");
+        if(content.length > 1000)
+            alert("Content is over 1000 characters");
+        if(author.length > 100)
+            alert("Author is over 100 characters");
 
         fetch('/api/subjects', {
             method: 'POST',
@@ -194,7 +252,6 @@
 
             postTitleElement.value = '';
             contentElement.value = '';
-            authorElement.value = '';
         });
     });
 </script>

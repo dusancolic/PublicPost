@@ -21,10 +21,6 @@ public class CommentService {
         return this.commentRepository.addComment(comment);
     }
 
-    public List<Comment> allComments() {
-        return this.commentRepository.allComments();
-    }
-
     public List<Comment> findComment(Integer id) {
         return this.commentRepository.findCommentWithPostId(id);
     }

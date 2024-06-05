@@ -1,7 +1,7 @@
 package rs.raf.demo.services;
 
 import rs.raf.demo.entities.Post;
-import rs.raf.demo.repositories.subject.PostRepository;
+import rs.raf.demo.repositories.post.PostRepository;
 
 import javax.inject.Inject;
 import java.util.List;
@@ -14,17 +14,17 @@ public class PostService {
     }
 
     @Inject
-    private PostRepository subjectRepository;
+    private PostRepository postRepository;
 
-    public Post addSubject(Post subject) {
-        return this.subjectRepository.addSubject(subject);
+    public Post addPost(Post post) {
+        return this.postRepository.addPost(post);
     }
 
-    public List<Post> allSubjects() {
-        return this.subjectRepository.allSubjects();
+    public List<Post> allPosts() {
+        return this.postRepository.allPosts();
     }
 
-    public Post findSubject(Integer id) {
-        return this.subjectRepository.findSubject(id);
+    public Post findPost(Integer id) {
+        return this.postRepository.findPost(id);
     }
 }

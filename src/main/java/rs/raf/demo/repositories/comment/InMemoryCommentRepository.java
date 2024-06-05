@@ -20,11 +20,6 @@ public class InMemoryCommentRepository implements CommentRepository{
     }
 
     @Override
-    public List<Comment> allComments() {
-        return new ArrayList<>(comments);
-    }
-
-    @Override
     public List<Comment> findCommentWithPostId(Integer id) {
         return comments.stream().filter(comment -> comment.getPostId().equals(id)).collect(Collectors.toList());
     }
